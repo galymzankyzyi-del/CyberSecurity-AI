@@ -1,0 +1,2698 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CyberThreat AI — Научное исследование</title>
+
+<style>
+:root {
+  --bg:#050d19;
+  --panel:rgba(13,27,48,.89);
+  --cyan:#59d7ff;
+  --blue:#557fff;
+  --green:#47e2a0;
+  --yellow:#ffd36d;
+  --red:#ff6582;
+  --text:#eaf3ff;
+  --muted:#9db1cd;
+  --line:rgba(99,179,255,.17);
+  --max:1280px;
+}
+
+* {box-sizing:border-box}
+html {scroll-behavior:smooth}
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,"Segoe UI",Arial,sans-serif;
+  overflow-x:hidden;
+}
+a {color:inherit;text-decoration:none}
+button,input {font:inherit}
+button {cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible {
+  outline:2px solid var(--cyan);
+  outline-offset:3px;
+}
+h1,h2,h3,h4 {margin:0;line-height:1.15}
+h1 {font-size:clamp(54px,8vw,108px);letter-spacing:-.055em}
+h2 {font-size:clamp(30px,4vw,47px);letter-spacing:-.035em}
+h3 {font-size:21px}
+h4 {font-size:16px}
+p {color:var(--muted);line-height:1.75}
+small {color:var(--muted)}
+.container {width:min(var(--max),calc(100% - 36px));margin:auto}
+.section {position:relative;padding:95px 0;scroll-margin-top:90px}
+.section-head {
+  display:flex;align-items:end;justify-content:space-between;
+  flex-wrap:wrap;gap:22px;margin-bottom:30px;
+}
+.section-head p {max-width:630px;margin:0}
+.eyebrow {
+  font-size:12px;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--cyan);margin-bottom:17px;
+}
+.eyebrow:before {
+  content:"";display:inline-block;width:24px;height:1px;
+  background:var(--cyan);vertical-align:middle;margin-right:10px;
+}
+
+/* Фон и эффект курсора */
+#gridCanvas {
+  position:fixed;inset:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;
+}
+#ambient {
+  position:fixed;inset:0;z-index:40;pointer-events:none;
+  opacity:0;transition:opacity .3s;
+  background:radial-gradient(
+    340px circle at var(--x,-1000px) var(--y,-1000px),
+    rgba(95,192,255,.09),
+    rgba(72,137,245,.03) 45%,
+    transparent 80%
+  );
+  mix-blend-mode:screen;
+}
+#ambient.active {opacity:1}
+header,main,footer {position:relative;z-index:2}
+
+/* Навигация */
+.nav {
+  position:sticky;top:0;z-index:30;
+  background:rgba(5,13,25,.85);
+  border-bottom:1px solid var(--line);
+  backdrop-filter:blur(20px);
+}
+.nav-inner {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:20px;min-height:74px;
+}
+.brand {display:flex;align-items:center;gap:12px;font-weight:800}
+.logo {
+  width:42px;height:42px;border-radius:12px;
+  display:grid;place-items:center;font-size:27px;
+  color:#061725;
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  box-shadow:0 0 25px #59d7ff32;
+}
+.brand small {display:block;font-size:11px;font-weight:400;margin-top:4px}
+.links {display:flex;gap:4px;align-items:center}
+.links a {
+  font-size:13px;color:var(--muted);
+  padding:9px;border-radius:8px;
+}
+.links a:hover {color:white;background:#59d7ff12}
+
+/* Карточки */
+.panel {
+  position:relative;isolation:isolate;
+  padding:24px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:20px;
+  box-shadow:0 18px 45px #00000022;
+  transition:border-color .25s,box-shadow .25s;
+}
+.panel:before {
+  content:"";position:absolute;inset:0;z-index:-1;
+  pointer-events:none;border-radius:inherit;opacity:0;
+  background:radial-gradient(
+    270px circle at var(--mx,50%) var(--my,50%),
+    rgba(90,190,255,.08),transparent 75%
+  );
+  transition:opacity .25s;
+}
+.panel:hover:before {opacity:1}
+.panel:hover {
+  border-color:#59d7ff55;
+  box-shadow:0 18px 45px #0003,0 0 24px #59d7ff0e;
+}
+.grid3 {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
+.grid2 {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.stack {display:grid;gap:15px}
+
+/* Кнопки */
+.btn {
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:13px 18px;border-radius:12px;
+  border:1px solid #59d7ff40;
+  background:#59d7ff0c;color:var(--text);
+  font-weight:600;
+  transition:background .2s,border-color .2s,box-shadow .2s;
+}
+.btn:hover {
+  background:#59d7ff20;border-color:#59d7ff88;
+  box-shadow:0 0 20px #59d7ff16;
+}
+.btn.primary {background:linear-gradient(125deg,#59d7ff35,#557fff30)}
+.btn.active {background:#59d7ff30;border-color:var(--cyan)}
+.btn:disabled {opacity:.4;cursor:not-allowed}
+.btnrow {display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-top:24px}
+.pill {
+  display:inline-flex;align-items:center;gap:7px;
+  border:1px solid var(--line);border-radius:30px;
+  padding:9px 13px;font-size:12px;color:var(--muted);
+  background:#59d7ff09;
+}
+.status {
+  padding:8px 12px;border-radius:24px;
+  color:var(--green);background:#47e2a014;
+  border:1px solid #47e2a044;
+  font-size:12px;font-weight:700;
+}
+.status.medium {color:var(--yellow);border-color:#ffd36d55;background:#ffd36d13}
+.status.high {color:var(--red);border-color:#ff658255;background:#ff658213}
+
+/* Первый экран */
+.hero {
+  min-height:calc(100vh - 74px);
+  display:flex;align-items:center;padding:75px 0;
+}
+.hero-grid {
+  display:grid;grid-template-columns:1.05fr .95fr;
+  gap:32px;align-items:center;
+}
+.hero h1 {
+  background:linear-gradient(125deg,#fff 10%,#b4ecff 58%,#74aaff);
+  background-clip:text;-webkit-background-clip:text;color:transparent;
+}
+.hero p {font-size:18px;max-width:660px;margin-top:20px}
+.hero-tags {display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.authors {margin-top:27px;color:var(--muted);line-height:2;font-size:13px}
+.authors strong {color:var(--text)}
+.hero-stats {display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:17px}
+.stat {
+  padding:12px;min-width:0;
+  border:1px solid var(--line);border-radius:12px;
+  background:#ffffff06;
+}
+.stat small {display:block;font-size:11px}
+.stat strong {display:block;font-size:22px;margin-top:7px}
+.mini-heading {
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:10px;margin-bottom:17px;
+}
+.hero-svg {
+  display:block;width:100%;height:auto;
+  background:#06152570;border:1px solid var(--line);
+  border-radius:13px;
+}
+
+/* Архитектуры */
+.arch-card {
+  text-align:left;color:var(--text);width:100%;
+  min-height:220px;
+}
+.arch-card.selected {
+  border-color:var(--cyan);
+  background:#18314ae6;
+}
+.arch-code {
+  display:inline-block;color:var(--cyan);
+  font-size:12px;font-weight:800;margin-bottom:16px;
+}
+.arch-graphic {height:110px;display:grid;place-items:center;margin:15px 0}
+.arch-graphic svg {width:100%;max-width:300px;height:100%}
+.arch-details {margin-top:17px}
+.arch-controls {display:flex;flex-wrap:wrap;gap:10px;margin-top:17px}
+
+/* Мониторинг */
+.monitor-panel {padding:24px}
+.monitor-top {
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;margin-bottom:18px;
+}
+.note {font-size:12px;color:var(--muted);line-height:1.65}
+.scenarios {
+  display:flex;flex-wrap:wrap;gap:9px;
+  margin-bottom:17px;
+}
+.scenarios .btn {font-size:13px;padding:11px 15px}
+.monitor-layout {
+  display:grid;grid-template-columns:minmax(0,1fr);
+  gap:17px;
+}
+
+/*
+  СХЕМА:
+  все объяснения находятся внутри SVG.
+  Отдельной панели объяснений справа нет.
+*/
+.network-stage {
+  position:relative;overflow:hidden;
+  border:1px solid var(--line);border-radius:17px;
+  background:
+    radial-gradient(ellipse at 50% 45%,#18365977,transparent 75%),
+    #071626;
+}
+.network-stage svg {
+  display:block;width:100%;height:auto;
+  aspect-ratio:900/480;
+  min-height:310px;
+}
+.edge {
+  stroke:#59d7ff42;
+  stroke-width:2.3;
+  stroke-dasharray:7 9;
+  transition:stroke .3s,stroke-width .3s,opacity .3s;
+}
+.edge.active {
+  stroke:var(--cyan);
+  stroke-width:3.5;
+  filter:drop-shadow(0 0 5px #59d7ff88);
+}
+.edge.danger {
+  stroke:var(--red);
+  filter:drop-shadow(0 0 6px #ff6582aa);
+}
+.node {
+  cursor:pointer;outline:none;
+}
+.node rect {
+  fill:#10243c;
+  stroke:#59d7ff8a;
+  stroke-width:1.7;
+  transition:fill .3s,stroke .3s;
+}
+.node text {
+  fill:var(--text);
+  font-size:16px;
+  font-weight:600;
+  text-anchor:middle;
+  dominant-baseline:middle;
+  pointer-events:none;
+}
+.node.active rect {
+  fill:#17435e;
+  stroke:var(--cyan);
+  stroke-width:2.7;
+  filter:drop-shadow(0 0 9px #59d7ff8a);
+}
+.node.danger rect {
+  fill:#462038;
+  stroke:var(--red);
+  filter:drop-shadow(0 0 10px #ff658299);
+}
+.node:focus rect,
+.node:hover rect {
+  stroke:#fff;
+}
+#movingPacket {
+  fill:var(--cyan);
+  filter:drop-shadow(0 0 7px var(--cyan));
+  pointer-events:none;
+}
+#movingPacket.danger {
+  fill:var(--red);
+  filter:drop-shadow(0 0 7px var(--red));
+}
+
+/* Выноска со стрелкой */
+.annotation-box {
+  fill:rgba(9,29,50,.97);
+  stroke:rgba(89,215,255,.7);
+  stroke-width:1.5;
+}
+.annotation-box.danger {stroke:var(--red)}
+.annotation-title {
+  font-size:18px;
+  font-weight:800;
+  fill:#eaf3ff;
+}
+.annotation-text {
+  font-size:14px;
+  fill:#b6d0e9;
+}
+.annotation-number {
+  font-size:12px;
+  fill:var(--cyan);
+  font-weight:700;
+}
+.annotation-arrow {
+  fill:none;
+  stroke:var(--cyan);
+  stroke-width:2.6;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  filter:drop-shadow(0 0 4px #59d7ff88);
+}
+.annotation-arrow.danger {
+  stroke:var(--red);
+  filter:drop-shadow(0 0 5px #ff658299);
+}
+.annotation-target {
+  fill:none;
+  stroke:var(--cyan);
+  stroke-width:2;
+  opacity:.75;
+}
+.annotation-target.danger {stroke:var(--red)}
+.network-caption {
+  padding:11px 15px;
+  color:var(--muted);
+  border-top:1px solid var(--line);
+  font-size:12px;
+}
+.node-tooltip {
+  position:absolute;
+  bottom:13px;left:14px;
+  max-width:min(430px,calc(100% - 28px));
+  padding:13px 16px;
+  background:rgba(7,22,39,.96);
+  border:1px solid #59d7ff77;
+  border-radius:12px;
+  box-shadow:0 10px 35px #0007;
+  pointer-events:none;
+}
+.node-tooltip strong {display:block;font-size:13px;color:var(--cyan);margin-bottom:5px}
+.node-tooltip p {font-size:12px;margin:0;color:#c3d5e9}
+.node-tooltip[hidden] {display:none}
+
+.monitor-controls {
+  display:flex;align-items:center;flex-wrap:wrap;
+  gap:9px;margin-top:18px;
+}
+.monitor-controls .btn {padding:11px 16px}
+.step-count {margin-left:auto;color:var(--muted);font-size:13px}
+.timeline {display:flex;gap:7px;margin-top:18px}
+.timeline button {
+  flex:1;height:8px;border:0;border-radius:10px;
+  background:#59d7ff24;
+  transition:background .2s,box-shadow .2s;
+}
+.timeline button.done {background:var(--cyan)}
+.timeline button.current {box-shadow:0 0 13px #59d7ff99}
+.timeline button:hover {background:#59d7ff99}
+.meter-head {
+  display:flex;justify-content:space-between;
+  margin-top:20px;margin-bottom:10px;
+}
+.meter {
+  height:11px;border-radius:20px;
+  overflow:hidden;background:#ffffff12;
+}
+.meter div {
+  height:100%;width:10%;background:var(--green);
+  border-radius:20px;
+  transition:width .5s,background .3s;
+}
+.monitor-bottom {
+  display:grid;grid-template-columns:1fr 1fr;gap:17px;
+}
+.chart-box {height:180px;position:relative;margin-top:12px}
+.chart-box canvas {width:100%;height:100%}
+.log {
+  list-style:none;padding:0;margin:15px 0 0;
+  display:grid;gap:8px;
+}
+.log li {
+  padding:10px 12px;border:1px solid #ffffff0c;
+  background:#ffffff06;border-radius:10px;
+  font-size:13px;color:var(--muted);
+}
+.log strong {color:var(--cyan)}
+.log li.latest {
+  border-color:#59d7ff66;
+  background:#59d7ff12;
+}
+.mini-label {
+  font-size:12px;text-transform:uppercase;
+  letter-spacing:.12em;color:var(--cyan);
+}
+
+/* Этапы обработки */
+.pipeline {display:grid;grid-template-columns:repeat(5,1fr);gap:13px}
+.pipeline .panel {padding:19px}
+.pipeline .number {
+  display:block;color:var(--cyan);
+  font-size:12px;letter-spacing:.15em;margin-bottom:14px;
+}
+.pipeline p {font-size:13px}
+
+/* Метрики */
+.metrics-layout {display:grid;grid-template-columns:1fr 1fr;gap:17px}
+.metrics-grid {display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.metric {
+  padding:17px;border-radius:13px;
+  border:1px solid var(--line);
+  background:#ffffff05;
+}
+.metric .value {
+  display:block;color:var(--cyan);
+  font-size:29px;font-weight:800;margin:10px 0;
+}
+.metric p {font-size:12px;margin:0}
+.metric-inputs {
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:12px;margin-top:18px;
+}
+.metric-inputs label {
+  display:grid;gap:7px;font-size:12px;color:var(--muted);
+}
+.metric-inputs input {
+  width:100%;padding:11px;
+  color:var(--text);background:#071728;
+  border:1px solid var(--line);border-radius:10px;
+}
+.dataset-list {color:var(--muted);line-height:1.9;padding-left:20px}
+.conclusion {display:grid;gap:11px;margin-top:17px}
+.conclusion div {
+  padding:16px 19px;
+  border:1px solid var(--line);border-radius:12px;
+  background:#ffffff05;color:var(--muted);
+}
+.conclusion strong {color:var(--cyan)}
+.footer {text-align:center;padding:60px 25px}
+.footer p {max-width:700px;margin:15px auto}
+
+/* Режим защиты */
+.presentation .nav {display:none}
+.presentation .hero {min-height:100vh}
+.presentation .section {scroll-margin-top:18px}
+.presentation-control {
+  display:none;position:fixed;bottom:15px;right:15px;z-index:35;
+  padding:12px 15px;border-radius:12px;
+  background:#0b2037;
+  border:1px solid var(--line);
+  font-size:12px;color:var(--muted);
+}
+.presentation .presentation-control {display:block}
+.reveal {
+  opacity:0;transform:translateY(22px);
+  transition:opacity .65s,transform .65s;
+}
+.reveal.visible {opacity:1;transform:none}
+
+@media(max-width:1100px) {
+  .hero-grid,.metrics-layout {grid-template-columns:1fr}
+  .pipeline {grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:850px) {
+  .links {display:none}
+  .grid3,.grid2,.monitor-bottom {grid-template-columns:1fr}
+  .hero {min-height:auto}
+  .pipeline {grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:560px) {
+  .container {width:calc(100% - 26px)}
+  .section {padding:70px 0}
+  h1 {letter-spacing:-2px}
+  .hero {padding:65px 0}
+  .panel {padding:18px}
+  .hero-stats {gap:5px}
+  .stat {padding:9px}
+  .stat strong {font-size:17px}
+  .metrics-grid,.pipeline {grid-template-columns:1fr}
+  .scenarios .btn {flex:1 1 42%}
+  .step-count {width:100%;margin:0}
+  .network-stage svg {min-height:250px}
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*:before,*:after {animation:none!important;transition:none!important}
+  .reveal {opacity:1;transform:none}
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="gridCanvas" aria-hidden="true"></canvas>
+<div id="ambient" aria-hidden="true"></div>
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a href="#home" class="brand">
+      <div class="logo">⬡</div>
+      <div>
+        CyberThreat AI
+        <small>Интерактивное научное исследование</small>
+      </div>
+    </a>
+
+    <nav class="links">
+      <a href="#about">Актуальность</a>
+      <a href="#models">Нейросети</a>
+      <a href="#monitor">Мониторинг</a>
+      <a href="#metrics">Метрики</a>
+      <a href="#datasets">Данные</a>
+      <a href="#conclusion">Выводы</a>
+    </nav>
+
+    <button class="btn" id="presentationBtn">
+      ⛶ Режим защиты
+    </button>
+  </div>
+</header>
+
+<main>
+
+<!-- ГЛАВНЫЙ ЭКРАН -->
+<section class="hero" id="home">
+  <div class="container hero-grid">
+
+    <div>
+      <div class="eyebrow">Интерактивная научная демонстрация</div>
+      <h1>CyberThreat AI</h1>
+
+      <p>
+        Применение искусственных нейронных сетей
+        для выявления и прогнозирования киберугроз.
+        Научное исследование в интерактивном формате.
+      </p>
+
+      <div class="hero-tags">
+        <span class="pill">MLP · CNN · LSTM</span>
+        <span class="pill">Кибербезопасность</span>
+        <span class="pill">Интерактивная демонстрация</span>
+      </div>
+
+      <div class="btnrow">
+        <a href="#about" class="btn primary">
+          Изучить исследование
+        </a>
+        <a href="#monitor" class="btn">
+          Запустить симуляцию →
+        </a>
+      </div>
+
+      <div class="authors">
+        <strong>Автор:</strong> Ғалымжанқызы И.<br>
+        <strong>Университет:</strong>
+        Таразский университет имени М. Х. Дулати<br>
+        <strong>Научный руководитель:</strong>
+        Джакашова Э. А.
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="mini-heading">
+        <div>
+          <strong>Обзор состояния сети</strong>
+          <div class="note">Демонстрационная сеть</div>
+        </div>
+        <span class="status" id="heroStatus">Стабильно</span>
+      </div>
+
+      <svg class="hero-svg"
+           viewBox="0 0 500 270"
+           role="img"
+           aria-label="Схема соединения пользователей, шлюза и серверов">
+
+        <g stroke="#59d7ff55"
+           stroke-width="2"
+           stroke-dasharray="6 7"
+           fill="none">
+          <path d="M62 135 L180 60 L310 135 L440 65"/>
+          <path d="M62 135 L180 210 L310 135 L440 205"/>
+        </g>
+
+        <g fill="#102a44" stroke="#59d7ff88">
+          <rect x="20" y="111" width="84" height="48" rx="10"/>
+          <rect x="145" y="38" width="70" height="44" rx="10"/>
+          <rect x="145" y="188" width="70" height="44" rx="10"/>
+          <rect x="270" y="111" width="80" height="48" rx="10"/>
+          <rect x="407" y="44" width="66" height="44" rx="10"/>
+          <rect x="407" y="183" width="66" height="44" rx="10"/>
+        </g>
+
+        <g fill="#eaf3ff"
+           font-size="11"
+           text-anchor="middle"
+           dominant-baseline="middle">
+          <text x="62" y="135">Интернет</text>
+          <text x="180" y="60">Клиент А</text>
+          <text x="180" y="210">Клиент Б</text>
+          <text x="310" y="135">Шлюз</text>
+          <text x="440" y="65">База</text>
+          <text x="440" y="205">Сервер</text>
+        </g>
+
+        <circle r="4" fill="#59d7ff">
+          <animateMotion
+            dur="3s"
+            repeatCount="indefinite"
+            path="M62 135 L180 60 L310 135 L440 65"/>
+        </circle>
+        <circle r="4" fill="#59d7ff">
+          <animateMotion
+            dur="4s"
+            repeatCount="indefinite"
+            path="M62 135 L180 210 L310 135 L440 205"/>
+        </circle>
+      </svg>
+
+      <div class="hero-stats">
+        <div class="stat">
+          <small>Сетевых событий</small>
+          <strong id="heroTraffic">12 480</strong>
+        </div>
+        <div class="stat">
+          <small>Подозрительных</small>
+          <strong id="heroSuspicious">14</strong>
+        </div>
+        <div class="stat">
+          <small>Уровень угрозы</small>
+          <strong id="heroLevel">Низкий</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- АКТУАЛЬНОСТЬ -->
+<section class="section" id="about">
+  <div class="section-head">
+  <div>
+    <div class="eyebrow">Актуальность исследования</div>
+    <h2>Почему это важно?</h2>
+  </div>
+</div>
+
+    <div class="grid3">
+      <article class="panel">
+        <h3>01 / Сложность атак</h3>
+        <p>
+          Кибератака может состоять из нескольких связанных
+          этапов, которые отдельно кажутся нормальными.
+        </p>
+      </article>
+
+      <article class="panel">
+        <h3>02 / Ограничения правил</h3>
+        <p>
+          Системы, основанные на известных сигнатурах,
+          не гарантируют обнаружение новых и изменённых атак.
+        </p>
+      </article>
+
+      <article class="panel">
+        <h3>03 / Прогнозирование</h3>
+        <p>
+          Важно оценивать не только текущую активность,
+          но и вероятность дальнейшего развития угрозы.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- АРХИТЕКТУРЫ -->
+<section class="section" id="models">
+  <div class="container reveal">
+
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Архитектуры нейронных сетей</div>
+        <h2>Какую нейросеть выбрать?</h2>
+      </div>
+      <p>
+        Выбери архитектуру и посмотри,
+        каким образом она обрабатывает данные.
+      </p>
+    </div>
+
+    <div class="grid3">
+
+      <button class="panel arch-card selected" data-model="mlp">
+        <span class="arch-code">01 / MLP</span>
+        <h3>Многослойный перцептрон</h3>
+        <div class="arch-graphic" id="mlpGraphic"></div>
+        <p>Классификация структурированных признаков.</p>
+      </button>
+
+      <button class="panel arch-card" data-model="cnn">
+        <span class="arch-code">02 / CNN</span>
+        <h3>Свёрточная нейронная сеть</h3>
+        <div class="arch-graphic" id="cnnGraphic"></div>
+        <p>Выявление локальных закономерностей.</p>
+      </button>
+
+      <button class="panel arch-card" data-model="lstm">
+        <span class="arch-code">03 / LSTM</span>
+        <h3>Сеть с временной памятью</h3>
+        <div class="arch-graphic" id="lstmGraphic"></div>
+        <p>Анализ последовательности сетевых событий.</p>
+      </button>
+
+    </div>
+
+    <div class="panel arch-details">
+      <div class="mini-heading">
+        <h3 id="modelTitle">Многослойный перцептрон</h3>
+        <span class="pill">Концептуальная визуализация</span>
+      </div>
+
+      <p id="modelDescription"></p>
+
+      <div class="arch-controls">
+        <button class="btn primary" id="modelAnimate">
+          ▶ Показать обработку
+        </button>
+        <span class="pill" id="modelState">Ожидание</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ИНТЕРАКТИВНЫЙ МОНИТОРИНГ -->
+<section class="section" id="monitor">
+  <div class="container reveal">
+
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Интерактивная симуляция</div>
+        <h2>Центр мониторинга киберугроз</h2>
+      </div>
+
+      <p>
+        Выбери сценарий, запускай его по шагам
+        и наблюдай за происходящим прямо на схеме сети.
+        Стрелки показывают, какой узел участвует в событии
+        и что происходит на каждом этапе.
+      </p>
+    </div>
+
+    <div class="monitor-layout">
+
+      <div class="panel monitor-panel">
+
+        <div class="monitor-top">
+          <div>
+            <h3>Интерактивная схема сети</h3>
+            <p class="note">
+              Безопасная учебная симуляция сетевой активности
+            </p>
+          </div>
+
+          <span class="status" id="simStatus">Норма</span>
+        </div>
+
+        <div class="scenarios" id="scenarioButtons">
+          <button class="btn active" data-scenario="normal">
+            Обычный трафик
+          </button>
+          <button class="btn" data-scenario="scan">
+            Сканирование портов
+          </button>
+          <button class="btn" data-scenario="brute">
+            Подбор пароля
+          </button>
+          <button class="btn" data-scenario="multi">
+            Многоэтапная атака
+          </button>
+        </div>
+
+        <!-- ОСНОВНАЯ СХЕМА -->
+        <div class="network-stage">
+
+          <svg id="networkSVG"
+               viewBox="0 0 900 480"
+               role="img"
+               aria-label="Схема сети с интерактивными объяснениями событий">
+
+            <defs>
+              <marker id="arrowBlue"
+                      markerWidth="9"
+                      markerHeight="9"
+                      refX="7"
+                      refY="4"
+                      orient="auto">
+                <path d="M0 0 L8 4 L0 8 Z"
+                      fill="#59d7ff"/>
+              </marker>
+
+              <marker id="arrowRed"
+                      markerWidth="9"
+                      markerHeight="9"
+                      refX="7"
+                      refY="4"
+                      orient="auto">
+                <path d="M0 0 L8 4 L0 8 Z"
+                      fill="#ff6582"/>
+              </marker>
+            </defs>
+
+            <!-- Линии сети -->
+            <g id="connections"></g>
+
+            <!-- Узлы сети -->
+            <g id="networkNodes"></g>
+
+            <!-- Анимированный пакет -->
+            <circle id="movingPacket"
+                    r="7"
+                    cx="-100"
+                    cy="-100"/>
+
+            <!-- Стрелка объяснения -->
+            <g id="annotationArrow">
+              <path id="annotationLine"
+                    class="annotation-arrow"
+                    marker-end="url(#arrowBlue)"/>
+              <circle id="annotationTarget"
+                      class="annotation-target"
+                      r="20"/>
+            </g>
+
+            <!-- Объяснение непосредственно на графе -->
+            <g id="annotationGroup">
+              <rect id="annotationBox"
+                    class="annotation-box"
+                    x="260" y="18"
+                    width="380" height="116"
+                    rx="15"/>
+
+              <text id="annotationNumber"
+                    class="annotation-number"
+                    x="279" y="40">
+                ЭТАП 1
+              </text>
+
+              <text id="annotationTitle"
+                    class="annotation-title"
+                    x="279" y="65">
+                Обычная активность
+              </text>
+
+              <text id="annotationText"
+                    class="annotation-text"
+                    x="279" y="89"></text>
+            </g>
+
+          </svg>
+
+          <!-- Подсказка о выбранном узле -->
+          <div class="node-tooltip" id="nodeTooltip" hidden>
+            <strong id="tooltipTitle"></strong>
+            <p id="tooltipText"></p>
+          </div>
+
+          <div class="network-caption">
+            Нажми на любой узел сети для дополнительной информации.
+            Голубые линии обозначают обычное движение данных,
+            красные — подозрительную активность.
+          </div>
+        </div>
+
+        <div class="monitor-controls">
+          <button class="btn primary" id="playBtn">
+            ▶ Запустить
+          </button>
+
+          <button class="btn" id="prevBtn">
+            ← Назад
+          </button>
+
+          <button class="btn" id="nextBtn">
+            Далее →
+          </button>
+
+          <button class="btn" id="resetBtn">
+            ↺ Сброс
+          </button>
+
+          <span class="step-count" id="stepCounter">
+            Этап 1 из 4
+          </span>
+        </div>
+
+        <div class="timeline" id="timeline"></div>
+
+        <div class="meter-head">
+          <strong>Условный уровень угрозы</strong>
+          <strong id="riskText">10 из 100</strong>
+        </div>
+
+        <div class="meter">
+          <div id="riskFill"></div>
+        </div>
+
+      </div>
+
+      <!-- Дополнительная аналитика под схемой -->
+      <div class="monitor-bottom">
+
+        <div class="panel">
+          <div class="mini-heading">
+            <h3>Активность сети</h3>
+            <span class="pill">Условные значения</span>
+          </div>
+          <p class="note">
+            Изменение интенсивности сетевых событий
+            в выбранном сценарии.
+          </p>
+          <div class="chart-box">
+            <canvas id="trafficCanvas"></canvas>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="mini-heading">
+            <h3>Журнал событий</h3>
+            <span class="pill" id="eventType">Норма</span>
+          </div>
+          <p class="note">
+            Последовательность событий, зарегистрированных
+            в демонстрационном сценарии.
+          </p>
+          <ul class="log" id="eventLog"></ul>
+        </div>
+
+      </div>
+
+    </div>
+
+    <p class="note" style="margin-top:18px">
+      Оценки риска и события являются учебными примерами.
+      Они не получены от обученной нейросети.
+    </p>
+  </div>
+</section>
+
+<!-- АЛГОРИТМ -->
+<section class="section" id="pipeline">
+  <div class="container reveal">
+
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Процесс анализа</div>
+        <h2>Как система принимает решение?</h2>
+      </div>
+      <p>
+        Нейросеть выступает аналитическим компонентом.
+        Окончательное подтверждение угрозы
+        остаётся задачей специалиста по безопасности.
+      </p>
+    </div>
+
+    <div class="pipeline">
+      <div class="panel">
+        <span class="number">ЭТАП 01</span>
+        <h4>Сбор данных</h4>
+        <p>Регистрация сетевых событий.</p>
+      </div>
+
+      <div class="panel">
+        <span class="number">ЭТАП 02</span>
+        <h4>Подготовка</h4>
+        <p>Очистка и формирование признаков.</p>
+      </div>
+
+      <div class="panel">
+        <span class="number">ЭТАП 03</span>
+        <h4>Анализ</h4>
+        <p>Применение MLP, CNN или LSTM.</p>
+      </div>
+
+      <div class="panel">
+        <span class="number">ЭТАП 04</span>
+        <h4>Оценка</h4>
+        <p>Выявление подозрительных закономерностей.</p>
+      </div>
+
+      <div class="panel">
+        <span class="number">ЭТАП 05</span>
+        <h4>Проверка</h4>
+        <p>Подтверждение предупреждения экспертом.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- МЕТРИКИ -->
+<section class="section" id="metrics">
+  <div class="container reveal">
+
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Оценка эффективности</div>
+        <h2>Интерактивные метрики</h2>
+      </div>
+      <p>
+        Изменяй значения матрицы ошибок,
+        чтобы увидеть, как меняется качество
+        условного классификатора.
+      </p>
+    </div>
+
+    <div class="metrics-layout">
+
+      <div class="panel">
+        <h3>Матрица ошибок</h3>
+
+        <div class="metric-inputs">
+          <label>
+            Верно обнаруженные атаки (TP)
+            <input id="tp" type="number" min="0" value="88">
+          </label>
+
+          <label>
+            Ложные тревоги (FP)
+            <input id="fp" type="number" min="0" value="9">
+          </label>
+
+          <label>
+            Пропущенные атаки (FN)
+            <input id="fn" type="number" min="0" value="12">
+          </label>
+
+          <label>
+            Верно определённая норма (TN)
+            <input id="tn" type="number" min="0" value="1800">
+          </label>
+        </div>
+
+        <div class="btnrow">
+          <button class="btn" id="balancedBtn">
+            Сбалансированный пример
+          </button>
+
+          <button class="btn" id="imbalancedBtn">
+            Дисбаланс классов
+          </button>
+        </div>
+
+        <p class="note" style="margin-top:17px">
+          Эти значения используются для демонстрации
+          математических формул, а не для оценки
+          модели, обученной в рамках статьи.
+        </p>
+      </div>
+
+      <div class="panel">
+        <div class="metrics-grid">
+
+          <div class="metric">
+            <strong>Precision — точность</strong>
+            <span class="value" id="precision">—</span>
+            <p>Доля верных предупреждений.</p>
+          </div>
+
+          <div class="metric">
+            <strong>Recall — полнота</strong>
+            <span class="value" id="recall">—</span>
+            <p>Доля обнаруженных атак.</p>
+          </div>
+
+          <div class="metric">
+            <strong>F1 — мера</strong>
+            <span class="value" id="f1">—</span>
+            <p>Баланс точности и полноты.</p>
+          </div>
+
+          <div class="metric">
+            <strong>Accuracy — доля верных решений</strong>
+            <span class="value" id="accuracy">—</span>
+            <p>Общая доля верных классификаций.</p>
+          </div>
+
+        </div>
+
+        <p id="metricComment"
+           style="font-size:13px;margin-top:17px"></p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ДАТАСЕТЫ -->
+<section class="section" id="datasets">
+  <div class="container reveal">
+
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Исследовательские данные</div>
+        <h2>Наборы данных для обучения</h2>
+      </div>
+      <p>
+        Для полноценного эксперимента необходимы
+        размеченные сетевые данные и независимая
+        оценка качества моделей.
+      </p>
+    </div>
+
+    <div class="grid2">
+
+      <article class="panel">
+        <div class="eyebrow">Набор данных 01</div>
+        <h3>UNSW-NB15</h3>
+        <p>
+          Содержит примеры нормального и атакующего
+          сетевого трафика.
+        </p>
+        <ul class="dataset-list">
+          <li>Признаки сетевых соединений</li>
+          <li>Различные категории атак</li>
+          <li>Сравнение алгоритмов классификации</li>
+        </ul>
+      </article>
+
+      <article class="panel">
+        <div class="eyebrow">Набор данных 02</div>
+        <h3>CICIDS2017</h3>
+        <p>
+          Набор сетевых данных, используемый
+          в исследованиях обнаружения вторжений.
+        </p>
+        <ul class="dataset-list">
+          <li>Различные сценарии сетевой активности</li>
+          <li>Характеристики сетевых потоков</li>
+          <li>Тестирование алгоритмов обнаружения</li>
+        </ul>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ВЫВОДЫ -->
+<section class="section" id="conclusion">
+  <div class="container reveal">
+
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Результаты обзора</div>
+        <h2>Основные выводы исследования</h2>
+      </div>
+      <p>
+        Использование нейронных сетей открывает
+        возможности для анализа киберугроз,
+        однако для подтверждения эффективности
+        нужны сравнительные эксперименты.
+      </p>
+    </div>
+
+    <div class="panel">
+      <div class="conclusion">
+        <div>
+          <strong>MLP</strong> — подходит для табличных признаков.
+        </div>
+        <div>
+          <strong>CNN</strong> — выявляет локальные закономерности.
+        </div>
+        <div>
+          <strong>LSTM</strong> — учитывает временные связи.
+        </div>
+        <div>
+          <strong>Precision, Recall и F1</strong> —
+          помогают оценивать ошибки обнаружения.
+        </div>
+        <div>
+          <strong>Прогнозирование угроз</strong> —
+          требует указания временного горизонта.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="section" style="padding-top:15px">
+  <div class="container">
+    <div class="panel footer">
+
+      <div class="eyebrow">Завершение исследования</div>
+      <h2>Спасибо за внимание</h2>
+
+      <p>
+        CyberThreat AI — интерактивная визуализация
+        научного исследования применения нейронных сетей
+        в кибербезопасности.
+      </p>
+
+      <div class="btnrow" style="justify-content:center">
+        <a href="#home" class="btn primary">
+          Вернуться к началу
+        </a>
+
+        <a href="#monitor" class="btn">
+          Повторить симуляцию
+        </a>
+      </div>
+
+    </div>
+  </div>
+</footer>
+
+</main>
+
+<div class="presentation-control" id="presentationHelp">
+  Стрелки ← → — разделы · Esc — выход
+</div>
+
+<script>
+"use strict";
+
+/* ===========================================
+   1. ФОНОВАЯ СЕТКА И КУРСОР
+=========================================== */
+
+const bg = document.getElementById("gridCanvas");
+const ctx = bg.getContext("2d");
+const ambient = document.getElementById("ambient");
+
+const reduced = matchMedia(
+  "(prefers-reduced-motion: reduce)"
+).matches;
+
+const fine = matchMedia("(pointer:fine)").matches;
+
+let W=0,H=0,DPR=1;
+
+const mouse = {
+  x:-1000,y:-1000,
+  tx:-1000,ty:-1000,
+  k:0,tk:0
+};
+
+function resizeBG() {
+  W=innerWidth;
+  H=innerHeight;
+  DPR=Math.min(devicePixelRatio||1,2);
+
+  bg.width=Math.round(W*DPR);
+  bg.height=Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+
+  if(reduced) drawBG();
+}
+
+function warp(x,y) {
+  if(mouse.k<.001) return [x,y];
+
+  const dx=x-mouse.x;
+  const dy=y-mouse.y;
+  const distance=Math.hypot(dx,dy);
+
+  if(distance>=220) return [x,y];
+
+  const fall=Math.pow(1-(distance/220)**2,2);
+  const factor=1+.15*fall*mouse.k;
+
+  return [
+    mouse.x+dx*factor,
+    mouse.y+dy*factor
+  ];
+}
+
+function gridLine(vertical,pos) {
+  const length=vertical?H:W;
+  ctx.beginPath();
+
+  for(let v=0;v<=length;v+=12) {
+    const p=warp(
+      vertical?pos:v,
+      vertical?v:pos
+    );
+
+    if(v===0) ctx.moveTo(...p);
+    else ctx.lineTo(...p);
+  }
+
+  const end=warp(
+    vertical?pos:length,
+    vertical?length:pos
+  );
+
+  ctx.lineTo(...end);
+  ctx.stroke();
+}
+
+function drawBG() {
+  ctx.clearRect(0,0,W,H);
+  ctx.lineWidth=1;
+
+  for(let x=0;x<=W;x+=48) {
+    const strength=Math.max(
+      0,1-Math.abs(x-mouse.x)/220
+    );
+
+    ctx.strokeStyle=
+      `rgba(89,215,255,${.045+.05*strength*mouse.k})`;
+
+    gridLine(true,x);
+  }
+
+  for(let y=0;y<=H;y+=48) {
+    const strength=Math.max(
+      0,1-Math.abs(y-mouse.y)/220
+    );
+
+    ctx.strokeStyle=
+      `rgba(89,215,255,${.045+.05*strength*mouse.k})`;
+
+    gridLine(false,y);
+  }
+}
+
+function animateBG() {
+  mouse.x+=(mouse.tx-mouse.x)*.18;
+  mouse.y+=(mouse.ty-mouse.y)*.18;
+  mouse.k+=(mouse.tk-mouse.k)*.13;
+
+  drawBG();
+  requestAnimationFrame(animateBG);
+}
+
+resizeBG();
+addEventListener("resize",resizeBG);
+
+if(!reduced) {
+  requestAnimationFrame(animateBG);
+}
+
+if(fine&&!reduced) {
+  addEventListener("pointermove",e=>{
+    mouse.tx=e.clientX;
+    mouse.ty=e.clientY;
+    mouse.tk=1;
+
+    ambient.style.setProperty("--x",e.clientX+"px");
+    ambient.style.setProperty("--y",e.clientY+"px");
+    ambient.classList.add("active");
+
+    const panel=e.target.closest(".panel");
+
+    if(panel) {
+      const rect=panel.getBoundingClientRect();
+      panel.style.setProperty(
+        "--mx",(e.clientX-rect.left)+"px"
+      );
+      panel.style.setProperty(
+        "--my",(e.clientY-rect.top)+"px"
+      );
+    }
+  },{passive:true});
+
+  document.addEventListener("mouseout",e=>{
+    if(!e.relatedTarget) {
+      mouse.tk=0;
+      ambient.classList.remove("active");
+    }
+  });
+
+  addEventListener("blur",()=>{
+    mouse.tk=0;
+    ambient.classList.remove("active");
+  });
+}
+
+/* ===========================================
+   2. ПОЯВЛЕНИЕ РАЗДЕЛОВ
+=========================================== */
+
+if("IntersectionObserver" in window&&!reduced) {
+  const observer=new IntersectionObserver(entries=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting) {
+        entry.target.classList.add("visible");
+        observer.unobserve(entry.target);
+      }
+    });
+  },{threshold:.06});
+
+  document.querySelectorAll(".reveal")
+    .forEach(el=>observer.observe(el));
+} else {
+  document.querySelectorAll(".reveal")
+    .forEach(el=>el.classList.add("visible"));
+}
+
+/* ===========================================
+   3. ВИЗУАЛИЗАЦИЯ НЕЙРОСЕТЕЙ
+=========================================== */
+
+const models = {
+  mlp: {
+    title:"MLP — многослойный перцептрон",
+    description:
+      "Модель анализирует подготовленные признаки сетевого соединения: длительность, количество пакетов, объём трафика и другие характеристики. Последовательность событий без дополнительной подготовки признаков напрямую не учитывается."
+  },
+  cnn: {
+    title:"CNN — свёрточная нейронная сеть",
+    description:
+      "Модель использует свёрточные фильтры для выявления локальных закономерностей в структурированном представлении сетевых данных."
+  },
+  lstm: {
+    title:"LSTM — анализ временной последовательности",
+    description:
+      "Модель последовательно обрабатывает события и сохраняет информацию о предыдущих временных шагах. Это позволяет учитывать связи между действиями пользователя."
+  }
+};
+
+let selectedModel="mlp";
+let modelTimer=null;
+
+function createGraphics() {
+  const neuron=(x,y,i)=>
+    `<circle cx="${x}" cy="${y}" r="8"
+      fill="#59d7ff" opacity=".7"
+      data-signal="${i}"/>`;
+
+  let mlp='<svg viewBox="0 0 300 110">';
+
+  const layers=[
+    [30,[26,55,84]],
+    [150,[16,42,68,94]],
+    [270,[40,70]]
+  ];
+
+  layers.forEach(([x,ys],li)=>{
+    if(li<layers.length-1) {
+      const [nx,nys]=layers[li+1];
+
+      ys.forEach(y=>{
+        nys.forEach(ny=>{
+          mlp+=`<line x1="${x}" y1="${y}"
+            x2="${nx}" y2="${ny}"
+            stroke="#59d7ff"
+            stroke-opacity=".2"/>`;
+        });
+      });
+    }
+
+    ys.forEach((y,i)=>{
+      mlp+=neuron(x,y,li*5+i);
+    });
+  });
+
+  document.getElementById("mlpGraphic").innerHTML=
+    mlp+"</svg>";
+
+  let cnn='<svg viewBox="0 0 300 110">';
+
+  for(let r=0;r<4;r++) {
+    for(let c=0;c<6;c++) {
+      cnn+=`<rect
+        x="${40+c*29}" y="${8+r*25}"
+        width="21" height="19" rx="3"
+        fill="#59d7ff"
+        fill-opacity="${.25+(r+c)%4*.17}"
+        data-signal="${r*6+c}"/>`;
+    }
+  }
+
+  document.getElementById("cnnGraphic").innerHTML=
+    cnn+"</svg>";
+
+  let lstm='<svg viewBox="0 0 300 110">';
+
+  for(let i=0;i<3;i++) {
+    const x=25+i*100;
+
+    lstm+=`<rect x="${x}" y="32"
+      width="64" height="46" rx="9"
+      fill="#59d7ff22" stroke="#59d7ff"
+      data-signal="${i}"/>
+      <text x="${x+32}" y="60"
+      fill="#eaf3ff" text-anchor="middle"
+      font-size="13">t${i+1}</text>`;
+
+    if(i<2) {
+      lstm+=`<path d="M${x+65} 55 H${x+98}"
+        stroke="#59d7ff" stroke-width="2"/>`;
+    }
+  }
+
+  document.getElementById("lstmGraphic").innerHTML=
+    lstm+"</svg>";
+}
+
+createGraphics();
+
+function chooseModel(key) {
+  selectedModel=key;
+  clearInterval(modelTimer);
+
+  document.querySelectorAll("[data-model]")
+    .forEach(button=>{
+      button.classList.toggle(
+        "selected",
+        button.dataset.model===key
+      );
+    });
+
+  document.getElementById("modelTitle").textContent=
+    models[key].title;
+
+  document.getElementById("modelDescription").textContent=
+    models[key].description;
+
+  document.getElementById("modelState").textContent=
+    "Ожидание";
+
+  document.querySelectorAll("[data-signal]")
+    .forEach(node=>{
+      node.style.filter="";
+      node.style.opacity="";
+    });
+}
+
+document.querySelectorAll("[data-model]")
+  .forEach(button=>{
+    button.addEventListener("click",()=>{
+      chooseModel(button.dataset.model);
+    });
+  });
+
+chooseModel("mlp");
+
+document.getElementById("modelAnimate")
+  .addEventListener("click",()=>{
+    clearInterval(modelTimer);
+
+    const nodes=[
+      ...document.querySelector(
+        `#${selectedModel}Graphic`
+      ).querySelectorAll("[data-signal]")
+    ];
+
+    let index=0;
+
+    document.getElementById("modelState").textContent=
+      "Обработка данных";
+
+    modelTimer=setInterval(()=>{
+      nodes.forEach(n=>{
+        n.style.filter="";
+        n.style.opacity="";
+      });
+
+      if(index>=nodes.length) {
+        clearInterval(modelTimer);
+        document.getElementById("modelState").textContent=
+          "Обработка завершена";
+        return;
+      }
+
+      nodes[index].style.filter=
+        "drop-shadow(0 0 10px #59d7ff)";
+
+      nodes[index].style.opacity="1";
+      index++;
+    },170);
+  });
+
+/* ===========================================
+   4. СОЗДАНИЕ ТОПОЛОГИИ СЕТИ
+=========================================== */
+
+const svgNS="http://www.w3.org/2000/svg";
+
+const coords = {
+  internet:[95,265],
+  clientA:[240,205],
+  clientB:[240,385],
+  gateway:[460,285],
+  database:[735,200],
+  server:[735,380]
+};
+
+const nodeInfo = {
+  internet:[
+    "Интернет",
+    "Внешний источник сетевых подключений."
+  ],
+  clientA:[
+    "Клиент А",
+    "Пользовательское устройство, создающее запросы."
+  ],
+  clientB:[
+    "Клиент Б",
+    "Второе пользовательское устройство."
+  ],
+  gateway:[
+    "Сетевой шлюз",
+    "Направляет подключения к внутренним ресурсам."
+  ],
+  database:[
+    "База данных",
+    "Защищённое хранилище данных."
+  ],
+  server:[
+    "Сервер",
+    "Обрабатывает запросы пользователей и авторизацию."
+  ]
+};
+
+const edges=[
+  ["internet","clientA"],
+  ["internet","clientB"],
+  ["internet","gateway"],
+  ["clientA","gateway"],
+  ["clientB","gateway"],
+  ["gateway","database"],
+  ["gateway","server"]
+];
+
+const connections=document.getElementById("connections");
+const nodesGroup=document.getElementById("networkNodes");
+
+function svgElement(tag,attrs={}) {
+  const element=document.createElementNS(svgNS,tag);
+
+  Object.entries(attrs).forEach(([key,value])=>{
+    element.setAttribute(key,value);
+  });
+
+  return element;
+}
+
+edges.forEach(([a,b],index)=>{
+  const [x1,y1]=coords[a];
+  const [x2,y2]=coords[b];
+
+  connections.appendChild(
+    svgElement("line",{
+      x1,y1,x2,y2,
+      class:"edge",
+      id:"edge-"+index
+    })
+  );
+});
+
+Object.entries(coords).forEach(([key,[x,y]])=>{
+  const group=svgElement("g",{
+    class:"node",
+    tabindex:"0",
+    role:"button",
+    "data-node":key,
+    "aria-label":nodeInfo[key][0]
+  });
+
+  group.appendChild(
+    svgElement("rect",{
+      x:x-60,
+      y:y-28,
+      width:120,
+      height:56,
+      rx:13
+    })
+  );
+
+  const label=svgElement("text",{
+    x,y:y+1
+  });
+
+  label.textContent=nodeInfo[key][0];
+  group.appendChild(label);
+
+  group.addEventListener("click",()=>{
+    inspectNode(key);
+  });
+
+  group.addEventListener("keydown",event=>{
+    if(event.key==="Enter"||event.key===" ") {
+      event.preventDefault();
+      inspectNode(key);
+    }
+  });
+
+  nodesGroup.appendChild(group);
+});
+
+const tooltip=document.getElementById("nodeTooltip");
+
+function inspectNode(key) {
+  document.getElementById("tooltipTitle").textContent=
+    nodeInfo[key][0];
+
+  document.getElementById("tooltipText").textContent=
+    nodeInfo[key][1];
+
+  tooltip.hidden=false;
+}
+
+document.getElementById("networkSVG")
+  .addEventListener("click",event=>{
+    if(!event.target.closest(".node")) {
+      tooltip.hidden=true;
+    }
+  });
+
+/* ===========================================
+   5. СЦЕНАРИИ СО СТРЕЛКАМИ И ОБЪЯСНЕНИЯМИ
+=========================================== */
+
+/*
+  target — узел, на который указывает стрелка.
+
+  explain — текст, который выводится
+  непосредственно внутри схемы.
+
+  route — путь движения сетевого пакета.
+*/
+
+const scenarioData = {
+  normal:{
+    name:"Обычный трафик",
+    steps:[
+      {
+        title:"Отправка запроса",
+        explain:"Клиент отправляет обычный запрос через сеть.",
+        target:"clientA",
+        route:["clientA","gateway"],
+        risk:8,
+        status:"Норма",
+        log:"Клиент отправил запрос"
+      },
+      {
+        title:"Передача через шлюз",
+        explain:"Сетевой шлюз принимает запрос и направляет его дальше.",
+        target:"gateway",
+        route:["clientA","gateway"],
+        risk:10,
+        status:"Норма",
+        log:"Шлюз обработал соединение"
+      },
+      {
+        title:"Обработка сервером",
+        explain:"Сервер получает запрос и выполняет разрешённую операцию.",
+        target:"server",
+        route:["gateway","server"],
+        risk:12,
+        status:"Норма",
+        log:"Сервер обработал запрос"
+      },
+      {
+        title:"Завершение операции",
+        explain:"Операция завершена. Подозрительной последовательности нет.",
+        target:"server",
+        route:["server","gateway"],
+        risk:7,
+        status:"Норма",
+        log:"Соединение завершено без ошибок"
+      }
+    ]
+  },
+
+  scan:{
+    name:"Сканирование портов",
+    steps:[
+      {
+        title:"Первое подключение",
+        explain:"Внешний источник начинает проверять доступность сети.",
+        target:"internet",
+        route:["internet","gateway"],
+        risk:20,
+        status:"Наблюдение",
+        log:"Зарегистрировано внешнее подключение"
+      },
+      {
+        title:"Обращения к портам",
+        explain:"На шлюз поступают запросы к нескольким портам.",
+        target:"gateway",
+        route:["internet","gateway"],
+        risk:48,
+        status:"Подозрительно",
+        log:"Обнаружены обращения к нескольким портам"
+      },
+      {
+        title:"Повторение запросов",
+        explain:"Последовательные подключения напоминают сканирование.",
+        target:"gateway",
+        route:["internet","gateway"],
+        risk:63,
+        status:"Подозрительно",
+        log:"Выявлен повторяющийся шаблон обращений"
+      },
+      {
+        title:"Формирование предупреждения",
+        explain:"Подозрительная активность требует проверки специалистом.",
+        target:"gateway",
+        route:["internet","gateway"],
+        risk:74,
+        status:"Предупреждение",
+        log:"Сформировано предупреждение о сканировании"
+      }
+    ]
+  },
+
+  brute:{
+    name:"Подбор пароля",
+    steps:[
+      {
+        title:"Попытка авторизации",
+        explain:"На сервер отправляется запрос на вход в систему.",
+        target:"server",
+        route:["internet","gateway","server"],
+        risk:19,
+        status:"Наблюдение",
+        log:"Зарегистрирована попытка входа"
+      },
+      {
+        title:"Неудачные попытки",
+        explain:"Сервер фиксирует несколько неправильных паролей.",
+        target:"server",
+        route:["internet","gateway","server"],
+        risk:51,
+        status:"Подозрительно",
+        log:"Обнаружены повторные ошибки авторизации"
+      },
+      {
+        title:"Подозрительная серия",
+        explain:"Частые ошибки входа указывают на возможный подбор пароля.",
+        target:"server",
+        route:["internet","gateway","server"],
+        risk:78,
+        status:"Высокий риск",
+        log:"Выявлена подозрительная серия попыток входа"
+      },
+      {
+        title:"Предупреждение",
+        explain:"Система отмечает сервер как потенциальную цель атаки.",
+        target:"server",
+        route:["gateway","server"],
+        risk:88,
+        status:"Высокий риск",
+        log:"Сформировано предупреждение об авторизации"
+      }
+    ]
+  },
+
+  multi:{
+    name:"Многоэтапная атака",
+    steps:[
+      {
+        title:"Первый этап: разведка",
+        explain:"Внешний источник проверяет сетевые ресурсы.",
+        target:"gateway",
+        route:["internet","gateway"],
+        risk:26,
+        status:"Наблюдение",
+        log:"Обнаружена активность, похожая на разведку"
+      },
+      {
+        title:"Второй этап: попытки доступа",
+        explain:"После разведки начинаются повторные попытки входа.",
+        target:"server",
+        route:["internet","gateway","server"],
+        risk:56,
+        status:"Подозрительно",
+        log:"После разведки зафиксированы ошибки входа"
+      },
+      {
+        title:"Третий этап: защищённые данные",
+        explain:"Подозрительные обращения направляются к базе данных.",
+        target:"database",
+        route:["gateway","database"],
+        risk:79,
+        status:"Высокий риск",
+        log:"Зафиксировано обращение к защищённому ресурсу"
+      },
+      {
+        title:"Четвёртый этап: предупреждение",
+        explain:"Связь событий указывает на возможную многоэтапную угрозу.",
+        target:"database",
+        route:["gateway","database"],
+        risk:94,
+        status:"Критический риск",
+        log:"Сформировано предупреждение о многоэтапной угрозе"
+      }
+    ]
+  }
+};
+
+/* ===========================================
+   6. УПРАВЛЕНИЕ СИМУЛЯЦИЕЙ
+=========================================== */
+
+let selectedScenario="normal";
+let selectedStep=0;
+let playing=false;
+let playTimer=null;
+let packetStart=performance.now();
+
+const packet=document.getElementById("movingPacket");
+const riskFill=document.getElementById("riskFill");
+const timeline=document.getElementById("timeline");
+const logList=document.getElementById("eventLog");
+
+function currentStep() {
+  return scenarioData[selectedScenario].steps[selectedStep];
+}
+
+function riskColor(value) {
+  if(value>=75) return "#ff6582";
+  if(value>=40) return "#ffd36d";
+  return "#47e2a0";
+}
+
+function statusClass(value) {
+  if(value>=75) return "high";
+  if(value>=40) return "medium";
+  return "";
+}
+
+function stopSimulation() {
+  playing=false;
+  clearInterval(playTimer);
+
+  document.getElementById("playBtn").textContent=
+    "▶ Запустить";
+}
+
+function chooseScenario(key) {
+  stopSimulation();
+
+  selectedScenario=key;
+  selectedStep=0;
+
+  tooltip.hidden=true;
+
+  document.querySelectorAll("[data-scenario]")
+    .forEach(button=>{
+      button.classList.toggle(
+        "active",
+        button.dataset.scenario===key
+      );
+    });
+
+  renderSimulation();
+}
+
+function nextStep() {
+  stopSimulation();
+  selectedStep=Math.min(3,selectedStep+1);
+  renderSimulation();
+}
+
+function previousStep() {
+  stopSimulation();
+  selectedStep=Math.max(0,selectedStep-1);
+  renderSimulation();
+}
+
+function resetSimulation() {
+  stopSimulation();
+  selectedStep=0;
+  renderSimulation();
+}
+
+function toggleSimulation() {
+  if(playing) {
+    stopSimulation();
+    return;
+  }
+
+  if(selectedStep===3) {
+    selectedStep=0;
+    renderSimulation();
+  }
+
+  playing=true;
+
+  document.getElementById("playBtn").textContent=
+    "Ⅱ Пауза";
+
+  playTimer=setInterval(()=>{
+    if(selectedStep>=3) {
+      stopSimulation();
+      return;
+    }
+
+    selectedStep++;
+    renderSimulation();
+
+    if(selectedStep>=3) {
+      stopSimulation();
+    }
+  },2700);
+}
+
+/* ===========================================
+   7. РИСОВАНИЕ ОБЪЯСНЕНИЯ НА ГРАФЕ
+=========================================== */
+
+const annotationBox=document.getElementById("annotationBox");
+const annotationGroup=document.getElementById("annotationGroup");
+const annotationTitle=document.getElementById("annotationTitle");
+const annotationText=document.getElementById("annotationText");
+const annotationLine=document.getElementById("annotationLine");
+const annotationTarget=document.getElementById("annotationTarget");
+const annotationNumber=document.getElementById("annotationNumber");
+
+/*
+  Все текстовые блоки остаются в верхней
+  области SVG, а стрелка указывает на целевой узел.
+
+  Расположение блока зависит от узла.
+*/
+
+function getAnnotationPosition(target) {
+  switch(target) {
+    case "internet":
+      return {x:300,y:20,w:380,h:112};
+
+    case "clientA":
+      return {x:420,y:20,w:420,h:112};
+
+    case "clientB":
+      return {x:420,y:20,w:420,h:112};
+
+    case "gateway":
+      return {x:440,y:20,w:410,h:112};
+
+    case "database":
+      return {x:55,y:20,w:430,h:112};
+
+    case "server":
+      return {x:55,y:20,w:430,h:112};
+
+    default:
+      return {x:250,y:20,w:400,h:112};
+  }
+}
+
+/* Перенос текста по словам внутри SVG */
+function wrapSVGText(textElement,text,maxChars) {
+  textElement.replaceChildren();
+
+  const words=text.split(/\s+/);
+  const lines=[];
+  let line="";
+
+  words.forEach(word=>{
+    const candidate=line?line+" "+word:word;
+
+    if(candidate.length>maxChars&&line) {
+      lines.push(line);
+      line=word;
+    } else {
+      line=candidate;
+    }
+  });
+
+  if(line) lines.push(line);
+
+  lines.forEach((value,index)=>{
+    const tspan=svgElement("tspan",{
+      x:textElement.getAttribute("x"),
+      dy:index===0?"0":"20"
+    });
+
+    tspan.textContent=value;
+    textElement.appendChild(tspan);
+  });
+
+  return lines.length;
+}
+
+function updateAnnotation() {
+  const data=currentStep();
+  const point=coords[data.target];
+
+  const box=getAnnotationPosition(data.target);
+
+  annotationBox.setAttribute("x",box.x);
+  annotationBox.setAttribute("y",box.y);
+  annotationBox.setAttribute("width",box.w);
+  annotationBox.setAttribute("height",box.h);
+
+  annotationNumber.setAttribute("x",box.x+18);
+  annotationNumber.setAttribute("y",box.y+23);
+  annotationNumber.textContent=
+    `ЭТАП ${selectedStep+1} ИЗ 4`;
+
+  annotationTitle.setAttribute("x",box.x+18);
+  annotationTitle.setAttribute("y",box.y+49);
+  annotationTitle.textContent=data.title;
+
+  annotationText.setAttribute("x",box.x+18);
+  annotationText.setAttribute("y",box.y+74);
+
+  wrapSVGText(
+    annotationText,
+    data.explain,
+    Math.max(30,Math.floor((box.w-36)/7.2))
+  );
+
+  /*
+    Стрелка начинается у края выноски
+    и заканчивается перед узлом.
+  */
+
+  const [targetX,targetY]=point;
+
+  const boxCenterX=box.x+box.w/2;
+  const startX=Math.max(
+    box.x+28,
+    Math.min(box.x+box.w-28,targetX)
+  );
+
+  const startY=box.y+box.h;
+
+  // Указываем на верхнюю границу узла.
+  const endX=targetX;
+  const endY=targetY-36;
+
+  const middleY=startY+(endY-startY)*.45;
+
+  annotationLine.setAttribute(
+    "d",
+    `M ${startX} ${startY}
+     C ${startX} ${middleY},
+       ${endX} ${middleY},
+       ${endX} ${endY}`
+  );
+
+  annotationTarget.setAttribute("cx",targetX);
+  annotationTarget.setAttribute("cy",targetY);
+
+  const danger=data.risk>=70;
+
+  annotationBox.classList.toggle("danger",danger);
+  annotationLine.classList.toggle("danger",danger);
+  annotationTarget.classList.toggle("danger",danger);
+
+  annotationLine.setAttribute(
+    "marker-end",
+    danger?"url(#arrowRed)":"url(#arrowBlue)"
+  );
+
+  // Плавное появление при смене шага.
+  annotationGroup.animate(
+    [
+      {opacity:0,transform:"translateY(-5px)"},
+      {opacity:1,transform:"translateY(0)"}
+    ],
+    {duration:360,easing:"ease-out"}
+  );
+
+  document.getElementById("annotationArrow").animate(
+    [{opacity:0},{opacity:1}],
+    {duration:400}
+  );
+}
+
+/* ===========================================
+   8. ОБНОВЛЕНИЕ ГРАФА И ИНДИКАТОРОВ
+=========================================== */
+
+function renderSimulation() {
+  const data=currentStep();
+  const steps=scenarioData[selectedScenario].steps;
+
+  updateAnnotation();
+
+  document.getElementById("simStatus").textContent=
+    data.status;
+
+  document.getElementById("simStatus").className=
+    "status "+statusClass(data.risk);
+
+  document.getElementById("eventType").textContent=
+    data.status;
+
+  document.getElementById("stepCounter").textContent=
+    `Этап ${selectedStep+1} из ${steps.length}`;
+
+  document.getElementById("riskText").textContent=
+    `${data.risk} из 100`;
+
+  riskFill.style.width=data.risk+"%";
+  riskFill.style.background=riskColor(data.risk);
+
+  // Обновляем подсветку соединений.
+  document.querySelectorAll(".edge")
+    .forEach(edge=>{
+      const index=Number(edge.id.replace("edge-",""));
+      const [a,b]=edges[index];
+
+      const active=data.route.some((node,i)=>{
+        if(i>=data.route.length-1) return false;
+
+        return (
+          (data.route[i]===a&&data.route[i+1]===b)||
+          (data.route[i]===b&&data.route[i+1]===a)
+        );
+      });
+
+      edge.classList.toggle("active",active);
+      edge.classList.toggle(
+        "danger",
+        active&&data.risk>=70
+      );
+    });
+
+  // Подсвечиваем цель события.
+  document.querySelectorAll(".node")
+    .forEach(node=>{
+      const isTarget=node.dataset.node===data.target;
+
+      node.classList.toggle("active",isTarget);
+      node.classList.toggle(
+        "danger",isTarget&&data.risk>=70
+      );
+    });
+
+  packet.classList.toggle("danger",data.risk>=70);
+  packetStart=performance.now();
+
+  // Журнал событий.
+  logList.replaceChildren();
+
+  steps.slice(0,selectedStep+1).forEach((item,index)=>{
+    const li=document.createElement("li");
+    const strong=document.createElement("strong");
+
+    if(index===selectedStep) li.className="latest";
+
+    strong.textContent=`Этап ${index+1}: `;
+    li.append(strong,item.log);
+
+    logList.appendChild(li);
+  });
+
+  // Шкала этапов.
+  timeline.replaceChildren();
+
+  steps.forEach((item,index)=>{
+    const button=document.createElement("button");
+
+    button.title=item.title;
+    button.setAttribute(
+      "aria-label",
+      `Перейти к этапу ${index+1}: ${item.title}`
+    );
+
+    if(index<=selectedStep) {
+      button.classList.add("done");
+    }
+
+    if(index===selectedStep) {
+      button.classList.add("current");
+    }
+
+    button.addEventListener("click",()=>{
+      stopSimulation();
+      selectedStep=index;
+      renderSimulation();
+    });
+
+    timeline.appendChild(button);
+  });
+
+  // Данные на главном экране.
+  document.getElementById("heroTraffic").textContent=
+    (12480+selectedStep*260).toLocaleString("ru-RU");
+
+  document.getElementById("heroSuspicious").textContent=
+    String(Math.round(data.risk/2));
+
+  document.getElementById("heroLevel").textContent=
+    data.risk>=75?"Высокий":
+    data.risk>=40?"Средний":"Низкий";
+
+  const heroStatus=document.getElementById("heroStatus");
+
+  heroStatus.textContent=
+    data.risk>=75?"Высокий риск":
+    data.risk>=40?"Подозрительно":"Стабильно";
+
+  heroStatus.className=
+    "status "+statusClass(data.risk);
+
+  drawTraffic();
+}
+
+/* ===========================================
+   9. АНИМАЦИЯ ПАКЕТОВ
+=========================================== */
+
+function animatePacket(time) {
+  const route=currentStep().route;
+  const points=route.map(key=>coords[key]);
+
+  if(points.length>=2) {
+    const segments=points.length-1;
+
+    const progress=
+      ((time-packetStart)%2100)/2100*segments;
+
+    const index=Math.min(
+      segments-1,
+      Math.floor(progress)
+    );
+
+    const t=progress-index;
+
+    const a=points[index];
+    const b=points[index+1];
+
+    const x=a[0]+(b[0]-a[0])*t;
+    const y=a[1]+(b[1]-a[1])*t;
+
+    packet.setAttribute("cx",x);
+    packet.setAttribute("cy",y);
+  }
+
+  if(!reduced) requestAnimationFrame(animatePacket);
+}
+
+/* ===========================================
+   10. ГРАФИК СЕТЕВОЙ АКТИВНОСТИ
+=========================================== */
+
+const trafficCanvas=document.getElementById("trafficCanvas");
+const trafficCtx=trafficCanvas.getContext("2d");
+
+function drawTraffic() {
+  const rect=trafficCanvas.getBoundingClientRect();
+
+  const width=Math.max(100,rect.width);
+  const height=Math.max(100,rect.height);
+
+  const dpr=Math.min(devicePixelRatio||1,2);
+
+  trafficCanvas.width=Math.round(width*dpr);
+  trafficCanvas.height=Math.round(height*dpr);
+
+  trafficCtx.setTransform(dpr,0,0,dpr,0,0);
+  trafficCtx.clearRect(0,0,width,height);
+
+  // Горизонтальная разметка.
+  trafficCtx.strokeStyle="#ffffff14";
+  trafficCtx.lineWidth=1;
+
+  for(let i=1;i<=3;i++) {
+    const y=i*height/4;
+
+    trafficCtx.beginPath();
+    trafficCtx.moveTo(0,y);
+    trafficCtx.lineTo(width,y);
+    trafficCtx.stroke();
+  }
+
+  const risk=currentStep().risk;
+  const values=[];
+
+  for(let i=0;i<20;i++) {
+    const base=14+risk*.48;
+
+    values.push(
+      Math.max(
+        2,
+        base+
+        Math.sin(i*.8+selectedStep)*9+
+        (i%4)*3
+      )
+    );
+  }
+
+  const points=values.map((value,i)=>[
+    i/(values.length-1)*width,
+    height-12-(value/110)*(height-24)
+  ]);
+
+  const color=riskColor(risk);
+
+  trafficCtx.beginPath();
+
+  points.forEach(([x,y],index)=>{
+    if(index===0) trafficCtx.moveTo(x,y);
+    else trafficCtx.lineTo(x,y);
+  });
+
+  trafficCtx.strokeStyle=color;
+  trafficCtx.lineWidth=2.5;
+  trafficCtx.stroke();
+
+  trafficCtx.lineTo(width,height);
+  trafficCtx.lineTo(0,height);
+  trafficCtx.closePath();
+
+  const gradient=trafficCtx.createLinearGradient(
+    0,0,0,height
+  );
+
+  gradient.addColorStop(0,color+"38");
+  gradient.addColorStop(1,"rgba(89,215,255,0)");
+
+  trafficCtx.fillStyle=gradient;
+  trafficCtx.fill();
+}
+
+addEventListener("resize",drawTraffic);
+
+/* ===========================================
+   11. СОБЫТИЯ УПРАВЛЕНИЯ
+=========================================== */
+
+document.querySelectorAll("[data-scenario]")
+  .forEach(button=>{
+    button.addEventListener("click",()=>{
+      chooseScenario(button.dataset.scenario);
+    });
+  });
+
+document.getElementById("playBtn")
+  .addEventListener("click",toggleSimulation);
+
+document.getElementById("nextBtn")
+  .addEventListener("click",nextStep);
+
+document.getElementById("prevBtn")
+  .addEventListener("click",previousStep);
+
+document.getElementById("resetBtn")
+  .addEventListener("click",resetSimulation);
+
+chooseScenario("normal");
+
+if(!reduced) {
+  requestAnimationFrame(animatePacket);
+}
+
+/* ===========================================
+   12. ИНТЕРАКТИВНЫЕ МЕТРИКИ
+=========================================== */
+
+const inputIds=["tp","fp","fn","tn"];
+
+function metricInput(id) {
+  const value=Number(
+    document.getElementById(id).value
+  );
+
+  return Number.isFinite(value)&&value>=0?
+    Math.floor(value):0;
+}
+
+function calculateMetrics() {
+  const TP=metricInput("tp");
+  const FP=metricInput("fp");
+  const FN=metricInput("fn");
+  const TN=metricInput("tn");
+
+  const divide=(a,b)=>b?a/b:null;
+
+  const precision=divide(TP,TP+FP);
+  const recall=divide(TP,TP+FN);
+
+  const f1=(
+    precision!==null&&recall!==null
+  )?divide(
+    2*precision*recall,
+    precision+recall
+  ):null;
+
+  const accuracy=divide(
+    TP+TN,
+    TP+FP+FN+TN
+  );
+
+  [
+    ["precision",precision],
+    ["recall",recall],
+    ["f1",f1],
+    ["accuracy",accuracy]
+  ].forEach(([id,value])=>{
+    document.getElementById(id).textContent=
+      value===null?"—":
+      (value*100).toFixed(1)+"%";
+  });
+
+  let comment="";
+
+  if(
+    accuracy!==null&&
+    recall!==null&&
+    accuracy>.9&&recall<.6
+  ) {
+    comment=
+      "Общая доля верных решений высокая, "+
+      "но система пропускает значительную часть атак. "+
+      "Это иллюстрирует проблему дисбаланса классов.";
+  } else {
+    comment=
+      "Точность показывает качество предупреждений, "+
+      "а полнота — способность обнаруживать реальные атаки.";
+  }
+
+  document.getElementById("metricComment")
+    .textContent=comment;
+}
+
+inputIds.forEach(id=>{
+  document.getElementById(id)
+    .addEventListener("input",calculateMetrics);
+});
+
+function setMatrix(values) {
+  inputIds.forEach((id,index)=>{
+    document.getElementById(id).value=values[index];
+  });
+
+  calculateMetrics();
+}
+
+document.getElementById("balancedBtn")
+  .addEventListener("click",()=>{
+    setMatrix([88,9,12,100]);
+  });
+
+document.getElementById("imbalancedBtn")
+  .addEventListener("click",()=>{
+    setMatrix([25,10,75,9890]);
+  });
+
+calculateMetrics();
+
+/* ===========================================
+   13. РЕЖИМ ЗАЩИТЫ
+=========================================== */
+
+let presenting=false;
+
+const sectionIds=[
+  "home",
+  "about",
+  "models",
+  "monitor",
+  "pipeline",
+  "metrics",
+  "datasets",
+  "conclusion"
+];
+
+function togglePresentation() {
+  presenting=!presenting;
+
+  document.body.classList.toggle(
+    "presentation",
+    presenting
+  );
+
+  document.getElementById("presentationBtn")
+    .textContent=presenting?
+      "Выйти из режима":"⛶ Режим защиты";
+
+  if(presenting) {
+    document.documentElement.requestFullscreen?.()
+      .catch(()=>{});
+  } else if(document.fullscreenElement) {
+    document.exitFullscreen?.().catch(()=>{});
+  }
+}
+
+document.getElementById("presentationBtn")
+  .addEventListener("click",togglePresentation);
+
+document.addEventListener("fullscreenchange",()=>{
+  if(!document.fullscreenElement&&presenting) {
+    presenting=false;
+
+    document.body.classList.remove("presentation");
+
+    document.getElementById("presentationBtn")
+      .textContent="⛶ Режим защиты";
+  }
+});
+
+function monitorVisible() {
+  const rect=document.getElementById("monitor")
+    .getBoundingClientRect();
+
+  return (
+    rect.top<innerHeight*.55&&
+    rect.bottom>innerHeight*.45
+  );
+}
+
+document.addEventListener("keydown",event=>{
+  const activeTag=document.activeElement.tagName;
+
+  if(["INPUT","TEXTAREA","SELECT"].includes(activeTag)) {
+    return;
+  }
+
+  if(event.key==="Escape"&&presenting) {
+    togglePresentation();
+    return;
+  }
+
+  if(
+    event.key===" "&&
+    monitorVisible()&&!presenting
+  ) {
+    event.preventDefault();
+    toggleSimulation();
+    return;
+  }
+
+  if(
+    event.key==="ArrowRight"||
+    event.key==="ArrowLeft"
+  ) {
+    if(presenting) {
+      event.preventDefault();
+
+      const center=innerHeight/2;
+      let nearest=0;
+      let best=Infinity;
+
+      sectionIds.forEach((id,index)=>{
+        const rect=document.getElementById(id)
+          .getBoundingClientRect();
+
+        const distance=Math.abs(rect.top-center);
+
+        if(distance<best) {
+          best=distance;
+          nearest=index;
+        }
+      });
+
+      const direction=
+        event.key==="ArrowRight"?1:-1;
+
+      const target=Math.max(
+        0,
+        Math.min(
+          sectionIds.length-1,
+          nearest+direction
+        )
+      );
+
+      document.getElementById(sectionIds[target])
+        .scrollIntoView({behavior:"smooth"});
+
+    } else if(monitorVisible()) {
+      event.preventDefault();
+
+      if(event.key==="ArrowRight") nextStep();
+      else previousStep();
+    }
+  }
+});
+
+</script>
+</body>
+</html>
